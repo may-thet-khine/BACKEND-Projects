@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     
+      <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+      <script src="/socket.io/socket.io.js"></script>
+      <style type="text/css">
+        .container {
+            width: 100%;
+            height:400px;
+          }
+          .buttongp {
+              
+              color:aqua;
+              width: 45%;
+              height: 60px;
+              margin-top: 6%;
+              margin-left: 30%;
+          }
+          
+          #play, #pause {
+              float: left;
+              width: 130px;
+              height: 34px;
+              background-color: black;
+              font-weight: bold;
+              padding: 5px;
+              border: 2px solid gray;
+              border-radius: 10px;
+              margin-left: 20px;
+              text-align: center;
+              cursor: pointer;
+          }
+        
+          
+          #player {
+              margin-left: 20%;
+              margin-top: 5%;
+          }
+      </style>
+  </head>
+  <body>
+     <div class="container"> 
+      <div class="buttongp"> 
+        <div id="play">PLAY</div>
+        <div id="pause">PAUSE</div>
+      </div>
+      <div>
+      <div id="player"></div>
+      </div>
+     </div>
+
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '390',
+          width: '640',
+          videoId: 'Pkh8UtuejGw',
+          origin : 'http://localhost:8080',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+      var socket = io.connect('http://localhost:8080');
+      function onPlayerReady(event) {
+        //video play function
+          var playBtn = document.getElementById("play");
+          playBtn.addEventListener("click", function(){
+            socket.emit('playClicked', {id: event.target});
+          });
+          socket.on('playClicked', function(data){
+              console.log('play is clicked');
+              player.playVideo();
+          });
+        //video pause function
+          var pauseBtn = document.getElementById("pause");
+          pauseBtn.addEventListener("click", function(){
+            socket.emit('pauseClicked', {id: event.target});
+          });
+          socket.on('pauseClicked', function(){
+            console.log('pause is clicked');
+            player.pauseVideo();
+          });
+      }
+     
+      function onPlayerStateChange(event) 
+      {
+        if (event.data == YT.PlayerState.PLAYING && !done) {
+          setTimeout(stopVideo, 6000);
+          done = true;
+        }
+      }
+
+      function stopVideo() {
+        player.stopVideo();
+      }
+    </script>
+  </body>
+</html>
